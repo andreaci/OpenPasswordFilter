@@ -1,86 +1,65 @@
-﻿// This file is part of OpenPasswordFilter.
-// 
-// OpenPasswordFilter is free software; you can redistribute it and / or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
-// 
-// OpenPasswordFilter is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
-// GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with OpenPasswordFilter; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111 - 1307  USA
-//
-
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
-using System.Configuration;
 
 namespace OPFService {
-    class NetworkService {
-        OPFDictionary dict;
-        PwnedPwdDBCheck pwnDB = new PwnedPwdDBCheck();
-        Logger logger = new Logger();
+    class NetworkService
+    {
+        ApplicationChecks applicationChecks = null;
 
-        public NetworkService(OPFDictionary d = null) {
-            if (d != null) {
-                dict = d;
-            }
+        public NetworkService()
+        {
+            applicationChecks = new ApplicationChecks();
         }
 
-        public void main() {
+        public void main()
+        {
             IPAddress ip = IPAddress.Parse("127.0.0.1");
             IPEndPoint local = new IPEndPoint(ip, 5999);
             Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            try {
+            try 
+            {
                 listener.Bind(local);
                 listener.Listen(64);
+
                 while (true) {
                     Socket client = listener.Accept();
                     new Thread(() => handle(client)).Start();
                 }
             } catch (Exception e) {
-                logger.logException(e);
+                ApplicationConfiguration.Instance.LogException(e);
             }
         }
 
-        public void handle(Socket client) {
-            try {
+        public void handle(Socket client)
+        {
+            try 
+            {
                 NetworkStream netStream = new NetworkStream(client);
                 StreamReader istream = new StreamReader(netStream);
                 StreamWriter ostream = new StreamWriter(netStream);
-                String clientRecognitionKey = ConfigurationManager.AppSettings["OPFClientRecognitionKeyword"];
-
+                
                 string command = istream.ReadLine();
-                if (command == clientRecognitionKey) {
+
+                if (command == ApplicationConfiguration.Instance.ClientRecognitionKey)
+                {
+                    string userName = istream.ReadLine();
                     string password = istream.ReadLine();
-                    if (password.Length == 8 && password.StartsWith("vi")) {
-                        ostream.WriteLine("false");
-                        ostream.Flush();
-                        client.Close();
-                        return;
-                    }
-                    Boolean useDatabaseCheck = Convert.ToBoolean(ConfigurationManager.AppSettings["OPFDatabaseCheck"]);
-                    if (useDatabaseCheck) {
-                        ostream.WriteLine(pwnDB.containsHash(password) ? "false" : "true");
-                    } else {
-                        ostream.WriteLine(dict.contains(password) ? "false" : "true");
-                    }
-                    ostream.Flush();
-                } else {
+                    bool contained = applicationChecks.Contains(userName, password);
+                    contained = !contained;
+
+                    ostream.WriteLine(contained.ToString().ToLower());
+                } 
+                else 
                     ostream.WriteLine("ERROR");
-                    ostream.Flush();
-                }
+                
+                ostream.Flush();
+
             } catch (Exception e) {
-                logger.logException(e);
+                ApplicationConfiguration.Instance.LogException(e);
             }
             client.Close();
         }

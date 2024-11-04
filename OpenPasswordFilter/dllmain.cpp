@@ -91,19 +91,30 @@ PasswordChangeNotify(PUNICODE_STRING *UserName,
 //    <disconnect>
 //
 
-BOOLEAN askServer(SOCKET sock, PUNICODE_STRING Password) {
+BOOLEAN askServer(SOCKET sock, 
+	PUNICODE_STRING AccountName,
+	PUNICODE_STRING Password) 
+{
 	char buffer[1024];
-	char *preamble = "haveIbeenPWNed\n";
-	int i;
+	char *preamble = "STXPWDCHECK_PW_OPF\n";
 
-	i = send(sock, preamble, (int)strlen(preamble), 0);
-	if (i != SOCKET_ERROR) {
-		int length = Password->Length / sizeof(WCHAR);
+	int i = send(sock, preamble, (int)strlen(preamble), 0);
+
+	if (i != SOCKET_ERROR) 
+	{
+		int length = (AccountName->Length + 1 + Password->Length) / sizeof(WCHAR);
+
 		if (length + 2 < sizeof(buffer)) {
-			i = wcstombs(buffer, Password->Buffer, length);
+			i = wcstombs(buffer, AccountName->Buffer, length);
+			buffer[i] = '\n';
+			i++;
+
+			i += wcstombs(buffer+i+1, Password->Buffer, length);
 			buffer[i] = '\n';
 			buffer[i + 1] = '\0';
+
 			i = send(sock, buffer, (int)strlen(buffer), 0);
+
 			if (i != SOCKET_ERROR) {
 				i = recv(sock, buffer, sizeof(buffer), 0);
 				if (i > 0 && buffer[0] == 'f') {
@@ -163,7 +174,7 @@ extern "C" __declspec(dllexport) BOOLEAN __stdcall PasswordFilter(PUNICODE_STRIN
 		}
 
 		if (sock != INVALID_SOCKET) {
-			retval = askServer(sock, Password);
+			retval = askServer(sock, AccountName, Password);
 			closesocket(sock);
 		}
 	}

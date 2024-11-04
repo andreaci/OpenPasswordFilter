@@ -9,23 +9,24 @@ namespace OPFService
 {
     class Logger
     {
+        private string logFilePath;
 
-        public void logException(Exception e) {
-
-            Boolean loggingEnabled = Convert.ToBoolean(ConfigurationManager.AppSettings["OPFLoggingEnabled"]);
-
-            if (loggingEnabled) {
-                writeErrorToLog(e);
-            }
-
+        public Logger(string logFilePath)
+        {
+            this.logFilePath = logFilePath;
         }
 
-        private void writeErrorToLog(Exception errorException) {
+        public void logException(Exception e) => writeErrorToLog(e);
 
-            String filePath = ConfigurationManager.AppSettings["OPFLogFilePath"];
 
-            try {
-                using (StreamWriter writer = new StreamWriter(filePath, true)) {
+        private void writeErrorToLog(Exception errorException)
+        {
+
+
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(logFilePath, true))
+                {
                     writer.WriteLine(
                         DateTime.Now.ToString() + ": " +
                         errorException.Message + Environment.NewLine +
@@ -33,7 +34,9 @@ namespace OPFService
                         Environment.NewLine);
                 }
 
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
 
             }
 

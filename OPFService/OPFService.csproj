@@ -84,9 +84,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApplicationChecks.cs" />
+    <Compile Include="ApplicationConfiguration.cs" />
+    <Compile Include="IBasicPwdCheck.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="NetworkService.cs" />
     <Compile Include="OPFDictionary.cs" />
+    <Compile Include="OPFDictionaryDatabase.cs" />
+    <Compile Include="OPFDictionaryFile.cs" />
     <Compile Include="Program.cs">
       <SubType>Component</SubType>
     </Compile>
