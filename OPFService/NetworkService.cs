@@ -36,32 +36,42 @@ namespace OPFService {
 
         public void handle(Socket client)
         {
-            try 
+            try
             {
                 NetworkStream netStream = new NetworkStream(client);
                 StreamReader istream = new StreamReader(netStream);
                 StreamWriter ostream = new StreamWriter(netStream);
-                
+
                 string command = istream.ReadLine();
 
                 if (command == ApplicationConfiguration.Instance.ClientRecognitionKey)
                 {
                     string userName = istream.ReadLine();
                     string password = istream.ReadLine();
-                    bool contained = applicationChecks.Contains(userName, password);
+
+                    bool contained = applicationChecks.CheckPasswordRequirements(userName, password, out String failedCheck);
                     contained = !contained;
 
                     ostream.WriteLine(contained.ToString().ToLower());
-                } 
-                else 
+                    ostream.WriteLine(failedCheck);
+                }
+                else
                     ostream.WriteLine("ERROR");
-                
+
                 ostream.Flush();
 
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 ApplicationConfiguration.Instance.LogException(e);
             }
-            client.Close();
+            finally
+            {
+                client.Close();
+                client.Dispose();
+            }
+
+            GC.Collect();
         }
     }
 }

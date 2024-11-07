@@ -18,20 +18,13 @@ namespace OPFService
 
         public void logException(Exception e) => writeErrorToLog(e);
 
-
-        private void writeErrorToLog(Exception errorException)
+        internal void logEntry(string entry)
         {
-
-
             try
             {
                 using (StreamWriter writer = new StreamWriter(logFilePath, true))
                 {
-                    writer.WriteLine(
-                        DateTime.Now.ToString() + ": " +
-                        errorException.Message + Environment.NewLine +
-                        "StackTrace :" + errorException.StackTrace +
-                        Environment.NewLine);
+                    writer.WriteLine($"{DateTime.Now}: {entry}");
                 }
 
             }
@@ -39,8 +32,12 @@ namespace OPFService
             {
 
             }
-
         }
 
-    }
+        private void writeErrorToLog(Exception errorException)
+        {
+            logEntry($"{errorException.Message}\nStackTrace: {errorException.StackTrace}\n");
+
+        }
+   }
 }

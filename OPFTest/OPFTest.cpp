@@ -32,55 +32,70 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	WSADATA wsa;
 	PUNICODE_STRING pwd;
+	PUNICODE_STRING user;
 
-	pwd = (PUNICODE_STRING) malloc(sizeof(PUNICODE_STRING));
+	pwd  = (PUNICODE_STRING) malloc(sizeof(PUNICODE_STRING));
+	user = (PUNICODE_STRING)malloc(sizeof(PUNICODE_STRING));
 
 	printf("\n");
 	printf("----------------------------------------------------------------------\n");
-	printf("Test program for OpenPasswordFilter.dll (Josh Stone, yakovdk@gmail.com)\n");
+	printf("Test program for OpenPasswordFilter.dll                               \n");
 	printf("----------------------------------------------------------------------\n");
 	printf("\n");
-	if (argc < 2) {
-		printf("usage: opftest <password>\n");
+
+	if (argc < 3) {
+		printf("usage: opftest <user> <password>\n");
 		return 2;
 	}
 
 	printf("Initializing winsock...");
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) 
 		return 3;
-	}
+	
 	printf("done.\n");
 
 	PasswordFilter_t PasswordFilter;
+
 	printf("Loading library...");
 	HMODULE lib = LoadLibrary(L"OpenPasswordFilter.dll");
-	if (lib != NULL) {
+	if (lib != NULL) 
+	{
 		printf("success (%08x).\n", lib);
+	
 		printf("Getting PasswordFilter() address...");
 		PasswordFilter = (PasswordFilter_t)GetProcAddress(lib, "PasswordFilter");
-		if (PasswordFilter != NULL) {
+		
+		if (PasswordFilter != NULL) 
+		{
 			printf("success (%08x).\n", PasswordFilter);
-			if (PasswordFilter == NULL) {
+
+			if (PasswordFilter == NULL) 
 				return 1;
-			}
-			wprintf(L"Testing password %s...", argv[1]);
-			pwd->Length = wcslen(argv[1]) * sizeof(WCHAR);
-			pwd->MaximumLength = wcslen(argv[1]) * sizeof(WCHAR);
-			pwd->Buffer = argv[1];
-			if (PasswordFilter(pwd, pwd, pwd, 1)) {
-				printf("success.\n");
-			}
-			else {
-				printf("failure.\n");
-			}
+
+			wprintf(L"Testing user %s...", argv[1]);
+			user->Length = wcslen(argv[1]) * sizeof(WCHAR);
+			user->MaximumLength = wcslen(argv[1]) * sizeof(WCHAR);
+			user->Buffer = argv[1];
+
+			wprintf(L"Testing password %s...", argv[2]);
+			pwd->Length = wcslen(argv[2]) * sizeof(WCHAR);
+			pwd->MaximumLength = wcslen(argv[2]) * sizeof(WCHAR);
+			pwd->Buffer = argv[2];
+
+			wprintf(L"Calling service");
+			if (PasswordFilter(user, user, pwd, 1)) 
+				printf("Returned success.\n");
+			else 
+				printf("Returned failure.\n");
+			
 		}
-		else {
+		else 
 			printf("failed (%d).\n", GetLastError());
-		}
+		
 	}
-	else {
+	else 
 		printf("failed (%d).\n", GetLastError());
-	}
+	
 	return 0;
 }
 

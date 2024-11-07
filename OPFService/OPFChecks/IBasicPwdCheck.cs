@@ -8,6 +8,6 @@ namespace OPFService
     internal interface IBasicPwdCheck
     {
         Boolean IsEnabled();
-        Boolean Contains(string hash);
+        Boolean IsInvalid(string password);
     }
 }

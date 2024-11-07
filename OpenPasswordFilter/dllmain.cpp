@@ -98,28 +98,34 @@ BOOLEAN askServer(SOCKET sock,
 	char buffer[1024];
 	char *preamble = "STXPWDCHECK_PW_OPF\n";
 
-	int i = send(sock, preamble, (int)strlen(preamble), 0);
+	int retv = send(sock, preamble, (int)strlen(preamble), 0);
 
-	if (i != SOCKET_ERROR) 
+	if (retv != SOCKET_ERROR)
 	{
-		int length = (AccountName->Length + 1 + Password->Length) / sizeof(WCHAR);
+		{
+			int length = (AccountName->Length) / sizeof(WCHAR);
 
-		if (length + 2 < sizeof(buffer)) {
-			i = wcstombs(buffer, AccountName->Buffer, length);
+			int i = wcstombs(buffer, AccountName->Buffer, length);
 			buffer[i] = '\n';
-			i++;
 
-			i += wcstombs(buffer+i+1, Password->Buffer, length);
+			retv = send(sock, buffer, (int)strlen(buffer), 0);
+		}
+
+		{
+			int length = (Password->Length) / sizeof(WCHAR);
+
+			int i = wcstombs(buffer, Password->Buffer, length);
 			buffer[i] = '\n';
-			buffer[i + 1] = '\0';
+			buffer[i+1] = '\0';
 
-			i = send(sock, buffer, (int)strlen(buffer), 0);
+			retv = send(sock, buffer, (int)strlen(buffer), 0);
+		}
 
-			if (i != SOCKET_ERROR) {
-				i = recv(sock, buffer, sizeof(buffer), 0);
-				if (i > 0 && buffer[0] == 'f') {
-					return FALSE;
-				}
+
+		if (retv != SOCKET_ERROR) {
+			retv = recv(sock, buffer, sizeof(buffer), 0);
+			if (retv > 0 && (buffer[0] == 'F' || buffer[0] == 'f')) {
+				return FALSE;
 			}
 		}
 	}

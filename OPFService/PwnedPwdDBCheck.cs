@@ -12,7 +12,7 @@ namespace OPFService
     class PwnedPwdDBCheck : IBasicPwdCheck
     {
 
-        public Boolean Contains(string hash)
+        public Boolean IsInvalid(string hash)
         {
             ApplicationConfiguration configuration = ApplicationConfiguration.Instance;
 

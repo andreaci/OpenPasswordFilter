@@ -18,11 +18,17 @@ namespace OPFService
         private SqlConnection connection;
         private readonly Logger logger = null;
 
+        public String DomainNameForQueries { get; private set; }
         public String PwnedPwdDBTableName { get; private set; }
         public String ClientRecognitionKey { get; private set; }
         private String DatabaseConnectionString { get; set; }
         private String LogFilePath { get; set; }
         private String LogEventSource { get; set; }
+
+        public Int32 PwdMaxSameCharRepetition { get; private set; }
+
+        public Boolean PwdNotIncludingUserData { get; private set; }
+        public Boolean PwdNotIncludingUserDataCommonSubstitution { get; private set; }
 
         public Boolean UsePwnedPwd { get; private set; }
         public Boolean LoggingEnabled { get; private set; }
@@ -35,11 +41,16 @@ namespace OPFService
         public String MatchFile { get; private set; }
         public String ContMatchFile { get; private set; }  
 
+        public int PwdMinLength { get; private set; }  
+
 
         public ApplicationConfiguration()
         {
+            DomainNameForQueries = ConfigurationManager.AppSettings["DomainNameForQueries"];
             ClientRecognitionKey = ConfigurationManager.AppSettings["OPFClientRecognitionKeyword"];
             DatabaseConnectionString = ConfigurationManager.AppSettings["DatabaseConnectionString"];
+
+            PwdNotIncludingUserData = Convert.ToBoolean(ConfigurationManager.AppSettings["PwdNotIncludingUserData"]);
 
             UsePwnedPwd = Convert.ToBoolean(ConfigurationManager.AppSettings["UsePwnedPwd"]);
             PwnedPwdDBTableName = ConfigurationManager.AppSettings["PwnedPwdDatabaseTableName"];
@@ -50,6 +61,9 @@ namespace OPFService
             ContMatchesDatabaseTableName = ConfigurationManager.AppSettings["ContMatchesDatabaseTableName"];
             MatchFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ConfigurationManager.AppSettings["MatchFile"]);
             ContMatchFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ConfigurationManager.AppSettings["ContMatchFile"]);
+
+            PwdMinLength = Convert.ToInt32(ConfigurationManager.AppSettings["PwdMinLength"]);
+            PwdMaxSameCharRepetition = Convert.ToInt32(ConfigurationManager.AppSettings["PwdMaxSameCharRepetition"]);
 
             LoggingEnabled = Convert.ToBoolean(ConfigurationManager.AppSettings["LoggingEnabled"]);
             LogFilePath = ConfigurationManager.AppSettings["LogFilePath"];
@@ -97,10 +111,19 @@ namespace OPFService
         }
         internal void LogToWindowsEvents(String message, EventLogEntryType logType = EventLogEntryType.Information)
         {
-            using (EventLog eventLog = new EventLog("Application"))
+            if (LoggingEnabled)
+                logger.logEntry(message);
+
+            try
             {
-                eventLog.Source = LogEventSource;
-                eventLog.WriteEntry(message, logType, 101, 1);
+                using (EventLog eventLog = new EventLog("Application"))
+                {
+                    eventLog.Source = LogEventSource;
+                    eventLog.WriteEntry(message, logType, 101, 1);
+                }
+            }
+            catch (Exception e) {
+                Console.WriteLine($"LogToWIndowsEvents Exception: {e.Message}");
             }
         }
     
