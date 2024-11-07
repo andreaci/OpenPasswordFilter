@@ -51,7 +51,7 @@ namespace OPFService
                             }
                             catch (Exception ex)
                             {
-
+                                ApplicationConfiguration.Instance.LogException(ex, "GetUserData");
                             }
                         }
 

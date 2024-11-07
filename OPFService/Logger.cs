@@ -16,7 +16,7 @@ namespace OPFService
             this.logFilePath = logFilePath;
         }
 
-        public void logException(Exception e) => writeErrorToLog(e);
+        public void logException(Exception e, string description = "") => writeErrorToLog(e);
 
         internal void logEntry(string entry)
         {
@@ -34,9 +34,9 @@ namespace OPFService
             }
         }
 
-        private void writeErrorToLog(Exception errorException)
+        private void writeErrorToLog(Exception errorException, string description = "")
         {
-            logEntry($"{errorException.Message}\nStackTrace: {errorException.StackTrace}\n");
+            logEntry($"{description} - {errorException.Message}\nStackTrace: {errorException.StackTrace}\n");
 
         }
    }

@@ -104,10 +104,10 @@ namespace OPFService
 
         }
 
-        internal void LogException(Exception e)
+        internal void LogException(Exception e, string description = "")
         {
             if(LoggingEnabled)
-                logger.logException(e);
+                logger.logException(e, description);
         }
         internal void LogToWindowsEvents(String message, EventLogEntryType logType = EventLogEntryType.Information)
         {
